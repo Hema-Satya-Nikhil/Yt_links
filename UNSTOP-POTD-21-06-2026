@@ -1,0 +1,83 @@
+//CPP CODE 
+#include <iostream>
+#include <vector>
+#include <string>
+
+using namespace std;
+
+string raceWinner(int n, const vector<int>& tw)
+{
+    long long tortoiseTime = n - 1;
+    long long rabbitTime = 0;
+
+    vector<bool> used(n, false);
+
+    // Checkpoint 0 effect counts once
+    if (tw[0] > 0)
+    {
+        rabbitTime += tw[0];
+    }
+    else if (tw[0] == -1)
+    {
+        rabbitTime += 1;
+    }
+
+    used[0] = true;
+
+    int position = 0;
+
+    while (position < n - 1)
+    {
+        position += 2;
+        rabbitTime++;
+
+        if (position >= n - 1)
+        {
+            break;
+        }
+
+        if (!used[position])
+        {
+            used[position] = true;
+
+            if (tw[position] > 0)
+            {
+                rabbitTime += tw[position];
+            }
+            else if (tw[position] == -1)
+            {
+                rabbitTime++;
+                position = max(0, position - 1);
+            }
+        }
+    }
+
+    if (rabbitTime < tortoiseTime)
+    {
+        return "Rabbit";
+    }
+
+    if (rabbitTime > tortoiseTime)
+    {
+        return "Tortoise";
+    }
+
+    return "Tie";
+}
+
+int main()
+{
+    int n;
+    cin >> n;
+
+    vector<int> tw(n);
+
+    for (int i = 0; i < n; i++)
+    {
+        cin >> tw[i];
+    }
+
+    cout << raceWinner(n, tw) << endl;
+
+    return 0;
+}
