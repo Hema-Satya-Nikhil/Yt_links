@@ -1,0 +1,95 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+int isPrime(int x)
+{
+    if (x < 2)
+        return 0;
+
+    for (int i = 2; i * i <= x; i++)
+    {
+        if (x % i == 0)
+            return 0;
+    }
+
+    return 1;
+}
+
+int talentBurst(int* arr, int n)
+{
+    int* values = (int*)malloc((n + 2) * sizeof(int));
+
+    values[0] = 1;
+    values[n + 1] = 1;
+
+    for (int i = 0; i < n; i++)
+    {
+        values[i + 1] = arr[i];
+    }
+
+    long long** dp = (long long**)malloc((n + 2) * sizeof(long long*));
+
+    for (int i = 0; i < n + 2; i++)
+    {
+        dp[i] = (long long*)calloc(n + 2, sizeof(long long));
+    }
+
+    for (int len = 2; len <= n + 1; len++)
+    {
+        for (int left = 0; left + len <= n + 1; left++)
+        {
+            int right = left + len;
+
+            for (int k = left + 1; k < right; k++)
+            {
+                long long score =
+                    dp[left][k] +
+                    dp[k][right] +
+                    (long long)(values[left] + 2) *
+                    values[k] *
+                    (values[right] + 2);
+
+                if (isPrime(values[k]))
+                {
+                    score += values[k];
+                }
+
+                if (score > dp[left][right])
+                {
+                    dp[left][right] = score;
+                }
+            }
+        }
+    }
+
+    long long answer = dp[0][n + 1];
+
+    for (int i = 0; i < n + 2; i++)
+    {
+        free(dp[i]);
+    }
+
+    free(dp);
+    free(values);
+
+    return (int)answer;
+}
+
+int main()
+{
+    int n;
+    scanf("%d", &n);
+
+    int* arr = (int*)malloc(n * sizeof(int));
+
+    for (int i = 0; i < n; i++)
+    {
+        scanf("%d", &arr[i]);
+    }
+
+    printf("%d\n", talentBurst(arr, n));
+
+    free(arr);
+
+    return 0;
+}
