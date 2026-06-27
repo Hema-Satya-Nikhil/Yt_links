@@ -1,0 +1,160 @@
+//27TH JUNE CPP 
+#include <iostream>
+#include <vector>
+#include<functional>
+using namespace std;
+
+void process_queries(int n, vector<pair<int, int>>& edges, vector<tuple<int, int, int>>& queries) {
+    // Implement the logic for handling the toggle and query operations
+    // Return the results for each query of type 2
+    int N = n;
+    vector<vector<int>> adj(N + 1);
+
+    for (auto &e : edges) {
+        adj[e.first].push_back(e.second);
+        adj[e.second].push_back(e.first);
+    }
+
+    // HLD arrays
+    vector<int> parent(N+1), depth(N+1), heavy(N+1, -1);
+    vector<int> head(N+1), pos(N+1), subtree(N+1);
+    int curPos = 0;
+
+    // DFS to find heavy child
+    function<int(int,int)> dfs = [&](int v, int p) {
+        parent[v] = p;
+        subtree[v] = 1;
+        int maxSize = 0;
+
+        for (int u : adj[v]) {
+            if (u == p) continue;
+            depth[u] = depth[v] + 1;
+            int size = dfs(u, v);
+            subtree[v] += size;
+
+            if (size > maxSize) {
+                maxSize = size;
+                heavy[v] = u;
+            }
+        }
+        return subtree[v];
+    };
+
+    // Decompose
+    function<void(int,int)> decompose = [&](int v, int h) {
+        head[v] = h;
+        pos[v] = curPos++;
+
+        if (heavy[v] != -1)
+            decompose(heavy[v], h);
+
+        for (int u : adj[v]) {
+            if (u != parent[v] && u != heavy[v])
+                decompose(u, u);
+        }
+    };
+
+    dfs(1, 0);
+    decompose(1, 1);
+
+    // Segment Tree
+    int size = N;
+    vector<int> seg(4*N, 0), lazy(4*N, 0);
+
+    // Push lazy
+    function<void(int,int,int)> push = [&](int node, int l, int r) {
+        if (lazy[node]) {
+            seg[node] = (r - l + 1) - seg[node];
+            if (l != r) {
+                lazy[node*2] ^= 1;
+                lazy[node*2+1] ^= 1;
+            }
+            lazy[node] = 0;
+        }
+    };
+    function<void(int,int,int,int,int)> update = [&](int node, int l, int r, int ql, int qr) {
+        push(node, l, r);
+        if (r < ql || l > qr) return;
+
+        if (ql <= l && r <= qr) {
+            lazy[node] ^= 1;
+            push(node, l, r);
+            return;
+        }
+
+        int mid = (l + r) / 2;
+        update(node*2, l, mid, ql, qr);
+        update(node*2+1, mid+1, r, ql, qr);
+
+        seg[node] = seg[node*2] + seg[node*2+1];
+    };
+    function<int(int,int,int,int,int)> query = [&](int node, int l, int r, int ql, int qr) {
+        push(node, l, r);
+        if (r < ql || l > qr) return 0;
+
+        if (ql <= l && r <= qr)
+            return seg[node];
+
+        int mid = (l + r) / 2;
+        return query(node*2, l, mid, ql, qr) +
+            query(node*2+1, mid+1, r, ql, qr);
+    };
+    function<int(int,int)> query_path = [&](int a, int b) {
+        int res = 0;
+        while (head[a] != head[b]) {
+            if (depth[head[a]] < depth[head[b]])
+                swap(a, b);
+
+            res += query(1, 0, N-1, pos[head[a]], pos[a]);
+            a = parent[head[a]];
+        }
+
+        if (depth[a] > depth[b]) swap(a, b);
+        res += query(1, 0, N-1, pos[a] + 1, pos[b]);
+        return res;
+    };
+    function<void(int,int)> update_path = [&](int a, int b) {
+        while (head[a] != head[b]) {
+            if (depth[head[a]] < depth[head[b]])
+                swap(a, b);
+
+            update(1, 0, N-1, pos[head[a]], pos[a]);
+            a = parent[head[a]];
+        }
+
+        if (depth[a] > depth[b]) swap(a, b);
+
+        update(1, 0, N-1, pos[a] + 1, pos[b]);
+    };
+    for (auto &q : queries) {
+        int t = get<0>(q);
+        int u = get<1>(q);
+        int v = get<2>(q);
+        if (t == 1) {
+            update_path(u, v);
+        } else {
+            cout << query_path(u, v) << "\n";
+        }
+    }
+}
+
+int main() {
+    int n;
+    cin >> n;
+    vector<pair<int, int>> edges(n - 1);
+    for (int i = 0; i < n - 1; i++) {
+        cin >> edges[i].first >> edges[i].second;
+    }
+    int q;
+    cin >> q;
+    vector<tuple<int, int, int>> queries(q);
+    for (int i = 0; i < q; i++) {
+        int t, u, v;
+        cin >> t >> u >> v;
+        queries[i] = make_tuple(t, u, v);
+    }
+
+    process_queries(n, edges, queries);
+
+    return 0;
+}
