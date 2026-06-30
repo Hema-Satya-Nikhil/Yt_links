@@ -1,0 +1,44 @@
+// This code is for the model of llama-3.2-3b-instruct 
+from openai import OpenAI
+
+# Connect to LM Studio
+client = OpenAI(
+    base_url="http://192.168.0.148:1234/v1",
+    api_key="lm-studio"
+)
+
+def llm_prompt(prompt):
+    response = client.chat.completions.create(
+        model="llama-3.2-3b-instruct",
+        messages=[
+            {
+                "role": "user",
+                "content": prompt
+            }
+        ],
+        max_tokens=512,
+        temperature=0.7
+    )
+
+    return response.choices[0].message.content
+
+
+print("=" * 60)
+print("🤖 Llama 3.2 Chatbot")
+print("=" * 60)
+
+# Initial prompt
+print("\n👤 You: Hello World")
+print("🤖 AI:", llm_prompt("Hello World"))
+
+# Chat loop
+while True:
+
+    prompt = input("\n👤 You: ")
+
+    if prompt.lower() in ["exit", "quit"]:
+        print("\n🤖 AI: Goodbye! 👋")
+        break
+
+    print("\n🤖 AI:")
+    print(llm_prompt(prompt))
