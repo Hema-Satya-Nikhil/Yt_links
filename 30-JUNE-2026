@@ -1,0 +1,78 @@
+#include <iostream>
+#include <vector>
+#include <string>
+#include <unordered_map>
+#include<functional>
+using namespace std;
+vector<vector<int>> adj;
+long long ans = 0;
+// Placeholder function for user logic
+void dfs(int node, int parent, int mask, const string &labels, unordered_map<int, int> &freq) {
+    mask ^= (1 << (labels[node - 1] - 'a'));
+
+    ans += freq[mask];
+
+    for (int i = 0; i < 26; i++) {
+        int newMask = mask ^ (1 << i);
+        if (freq.count(newMask)) {
+            ans += freq[newMask];
+        }
+    }
+
+    freq[mask]++;
+
+    for (int nei : adj[node]) {
+        if (nei != parent) {
+            dfs(nei, node, mask, labels, freq);
+        }
+    }
+
+    freq[mask]--;
+}
+int count_palindromic_paths(int n, const string& labels, const vector<pair<int, int>>& edges) {
+    // User should implement this function
+    // Parameters:
+    // n: number of nodes in the tree
+    // labels: string where the i-th character is the letter assigned to the i-th node
+    // edges: vector of pairs where each pair denotes an undirected edge between nodes u and v
+    // Return: number of distinct paths in the tree that form palindromes when concatenated
+
+adj.assign(n + 1, vector<int>());
+
+    for (auto &e : edges) {
+        adj[e.first].push_back(e.second);
+        adj[e.second].push_back(e.first);
+    }
+
+    unordered_map<int, int> freq;
+    freq[0] = 1;
+
+    ans = 0;
+
+    dfs(1, -1, 0, labels, freq);
+
+    return ans;
+}
+
+int main() {
+    int n;
+    cin >> n;
+    
+    string labels;
+    cin >> labels;
+    
+    vector<pair<int, int>> edges(n - 1);
+    for (int i = 0; i < n - 1; ++i) {
+        int u, v;
+        cin >> u >> v;
+        edges[i] = {u, v};
+    }
+    
+    // Call the user logic function
+    int result = count_palindromic_paths(n, labels, edges);
+    
+    // Output the result
+    cout << result << endl;
+    
+    return 0;
+}
