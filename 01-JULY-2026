@@ -1,0 +1,44 @@
+#include <iostream>
+#include <vector>
+using namespace std;
+
+// Function where the user will implement their logic
+int minUnassignedShifts(int n, int m, const vector<int>& doctorSpecs, const vector<int>& shiftReqs) {
+    vector<int> freq(101, 0); 
+    for (int spec : doctorSpecs) {
+        freq[spec]++;
+    }
+
+    int unassigned = 0;
+    for (int req : shiftReqs) {
+        if (freq[req] > 0) {
+            freq[req]--; 
+        } else {
+            unassigned++; 
+        }
+    }
+
+    return unassigned;
+}
+
+int main() {
+    int n, m;
+    cin >> n >> m; // Read number of doctors and shifts
+    
+    vector<int> doctorSpecs(n);
+    vector<int> shiftReqs(m);
+
+    for (int i = 0; i < n; ++i) {
+        cin >> doctorSpecs[i]; // Read doctor's specializations
+    }
+
+    for (int i = 0; i < m; ++i) {
+        cin >> shiftReqs[i]; // Read required specializations for shifts
+    }
+
+    // Call the user logic function and print the result
+    int result = minUnassignedShifts(n, m, doctorSpecs, shiftReqs);
+    cout << result << endl;
+
+    return 0;
+}
